@@ -1,0 +1,20 @@
+.dark {
+    -fx-background-color: black;
+}
+.menu-bar {
+        -fx-background-color: black;
+        -fx-text-fill: white;
+}
+.list-view {
+    -fx-background-color: black;
+}
+.list-cell:filled:selected:focused, .list-cell:filled:selected{
+    -fx-border-color: #00E676;
+    -fx-border-width: 2px;
+    -fx-border-style: solid;
+}
+
+.list-cell {
+    -fx-background-color: black;
+    -fx-alignment: center;
+}
