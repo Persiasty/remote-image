@@ -2,12 +2,13 @@ package remoteimage;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.stage.Stage;
-import remoteimage.server.Controller;
+import remoteimage.server.view.Controller;
+import remoteimage.shared.WithStage;
 
 public class Main extends Application {
 
@@ -15,21 +16,25 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
 
         Scene scene;
+        FXMLLoader loader;
         if(getParameters().getUnnamed().contains("server")) {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("server/server.fxml"));
-            Parent root = loader.load();
-            Controller controller = loader.getController();
-            controller.setStageAndSetupListeners(primaryStage);
             primaryStage.setTitle("Display");
-            scene = new Scene(root, 800, 600);
+            primaryStage.setFullScreenExitKeyCombination(new KeyCodeCombination(KeyCode.ESCAPE));
+
+            loader = new FXMLLoader(getClass().getResource("server/view/server.fxml"));
+            scene = new Scene(loader.load(), 1080, 720);
         } else {
-            Parent root = FXMLLoader.load(getClass().getResource("client/client.fxml"));
             primaryStage.setTitle("Share");
             primaryStage.setAlwaysOnTop(true);
-            scene = new Scene(root, 200, 200);
+
+            loader = new FXMLLoader(getClass().getResource("client/view/client.fxml"));
+            scene = new Scene(loader.load(), 300, 150);
         }
 
-        primaryStage.setFullScreenExitKeyCombination(new KeyCodeCombination(KeyCode.ESCAPE));
+        WithStage controller = loader.getController();
+        controller.setupStage(primaryStage);
+
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
         primaryStage.setScene(scene);
         primaryStage.show();
     }
