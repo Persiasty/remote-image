@@ -4,7 +4,9 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import remoteimage.shared.Configuration;
+import remoteimage.shared.ImageItem;
 import remoteimage.shared.Item;
+import remoteimage.shared.RequestType;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -25,7 +27,8 @@ public class NetworkManager {
     private OnImageGetListener onImageGetListener;
 
     public interface OnImageGetListener {
-        public void onGetImage(Image img);
+        public void onGetImage(ImageItem img);
+        public void onRemoveImage(String id);
     }
 
     private class ServerTask implements Runnable {
@@ -35,13 +38,20 @@ public class NetworkManager {
                 serverSocket.setSoTimeout(1000);
                 do {
                     try {
-                        Socket sock = serverSocket.accept();
-                        ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
-                        Item item = (Item) ois.readObject();
-                        sock.close();
-
-                        BufferedImage img = ImageIO.read(new ByteArrayInputStream(item.data));
-                        onImageGetListener.onGetImage(SwingFXUtils.toFXImage(img, null));
+                        Item item;
+                        try(Socket sock = serverSocket.accept()) {
+                            try (
+                                    ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+                                    ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream())
+                            ) {
+                                item = (Item) ois.readObject();
+                                oos.writeInt(item.data.length);
+                            }
+                        }
+                        if(item.type == RequestType.REQ_UPLOAD)
+                            onImageGetListener.onGetImage(ImageItem.fromItem(item));
+                        else
+                            onImageGetListener.onRemoveImage(item.id);
                     } catch (SocketTimeoutException | ClassNotFoundException ignored) { }
                 } while (!Thread.interrupted());
 
@@ -62,6 +72,7 @@ public class NetworkManager {
         public void run() {
             try (DatagramSocket sock = new DatagramSocket()) {
                 for (InetAddress address : bras) {
+                    System.out.println(address);
                     sock.send(new DatagramPacket(
                             Configuration.BROADCAST_STRING,
                             Configuration.BROADCAST_STRING.length,

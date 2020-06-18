@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact name="remote-image:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/remote_image_jar</output-path>
+    <root id="root">
+      <element id="archive" name="remote-image.jar">
+        <element id="module-output" name="remote-image_main" />
+      </element>
+      <element id="library" level="project" name="Gradle: junit:junit:4.12" />
+      <element id="library" level="project" name="Gradle: org.hamcrest:hamcrest-core:1.3" />
+      <element id="library" level="project" name="Gradle: org.jsoup:jsoup:1.7.2" />
+    </root>
+  </artifact>
+</component>

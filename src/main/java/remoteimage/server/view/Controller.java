@@ -3,41 +3,23 @@ package remoteimage.server.view;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableListBase;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
-import javafx.util.Callback;
-import remoteimage.server.ImageCell;
+import remoteimage.shared.ImageCell;
 import remoteimage.server.NetworkManager;
-import remoteimage.shared.Item;
+import remoteimage.shared.ImageItem;
 import remoteimage.shared.WithStage;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.util.LinkedList;
-import java.util.Queue;
-
-public class Controller implements WithStage {
+public class Controller implements WithStage, NetworkManager.OnImageGetListener {
     @FXML
     public MenuBar menuBar;
     @FXML
-    public ListView<Image> imgsList;
+    public ListView<ImageItem> imgsList;
     @FXML
     private ImageView image;
 
@@ -48,18 +30,19 @@ public class Controller implements WithStage {
     @FXML
     public void initialize() {
         netman = new NetworkManager();
-        netman.setOnImageGetListener(this::addItem);
+        netman.setOnImageGetListener(this);
 
         image.fitWidthProperty().bind(((BorderPane)image.getParent()).widthProperty().subtract(imgsList.widthProperty()));
         image.fitHeightProperty().bind(((BorderPane)image.getParent()).heightProperty().subtract(menuBar.heightProperty()));
 
         imgsList.setCellFactory(p -> new ImageCell());
 
-        MultipleSelectionModel<Image> selectionModel = imgsList.getSelectionModel();
+        MultipleSelectionModel<ImageItem> selectionModel = imgsList.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.SINGLE);
-        selectionModel.getSelectedItems().addListener((ListChangeListener<Image>) c ->
-                Platform.runLater(() -> image.setImage(imgsList.getSelectionModel().getSelectedItem()))
-        );
+        selectionModel.getSelectedItems().addListener((ListChangeListener<ImageItem>) c -> {
+            if (c.getList().size() < 1) Platform.runLater(() -> imgsList.getSelectionModel().select(0));
+            else Platform.runLater(() -> image.setImage(c.getList().get(0).image));
+        });
     }
 
     @FXML
@@ -73,17 +56,6 @@ public class Controller implements WithStage {
         netman.stopBroadcast();
     }
 
-    private void addItem(Image img) {
-        ObservableList<Image> list = imgsList.getItems();
-        Platform.runLater(() ->{
-            list.add(0, img);
-            if(list.size() > 10)
-                list.remove(10);
-            imgsList.getSelectionModel().select(0);
-            imgsList.refresh();
-        });
-    }
-
     public void fullScreen(MouseEvent mouseEvent) {
         currentStage.setFullScreen(!currentStage.isFullScreen());
     }
@@ -92,5 +64,27 @@ public class Controller implements WithStage {
     public void setupStage(Stage stage) {
         this.currentStage = stage;
         currentStage.setOnCloseRequest(e -> netman.shutdown());
+    }
+
+    @Override
+    public void onGetImage(ImageItem img) {
+        Platform.runLater(() ->{
+            imgsList.getItems().add(0, img);
+//            if(list.size() > 10)
+//                list.remove(10);
+            imgsList.getSelectionModel().select(0);
+            imgsList.refresh();
+        });
+    }
+
+    @Override
+    public void onRemoveImage(String id) {
+        Platform.runLater(() -> {
+            imgsList.getItems().removeIf(i -> i.id.equals(id));
+//            if(list.size() > 10)
+//                list.remove(10);
+            imgsList.getSelectionModel().select(0);
+            imgsList.refresh();
+        });
     }
 }

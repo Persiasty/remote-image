@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/RemoteImage.iml" filepath="$PROJECT_DIR$/RemoteImage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/remote-image.iml" filepath="$PROJECT_DIR$/.idea/modules/remote-image.iml" group="remote-image" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/remote-image_main.iml" filepath="$PROJECT_DIR$/.idea/modules/remote-image_main.iml" group="remote-image" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/remote-image_test.iml" filepath="$PROJECT_DIR$/.idea/modules/remote-image_test.iml" group="remote-image" />
     </modules>
   </component>
 </project>

@@ -19,6 +19,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.*;
 import java.net.URL;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -79,10 +80,11 @@ public class DragDropManager {
                         baos.write(buff, 0, len);
 
                     item.data = baos.toByteArray();
+                    item.id = UUID.nameUUIDFromBytes(item.data).toString();
 
                     if(!Thread.interrupted() && onDroppedAction != null) onDroppedAction.onDrop(item);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, e.toString(), ButtonType.OK).showAndWait());
                 }
             });
             event.setDropCompleted(true);
@@ -97,7 +99,7 @@ public class DragDropManager {
                 try {
                     return new BufferedInputStream(new FileInputStream(files.get(0)));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, e.toString(), ButtonType.OK).showAndWait());
                 }
             } else {
                 Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Niepoprawny format pliku", ButtonType.OK).showAndWait());

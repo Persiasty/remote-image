@@ -1,9 +1,12 @@
 package remoteimage.client.view;
 
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -11,8 +14,10 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import remoteimage.client.DragDropManager;
 import remoteimage.client.NetworkManager;
-import remoteimage.shared.WithStage;
+import remoteimage.client.Status;
+import remoteimage.shared.*;
 
+import java.io.IOException;
 import java.net.InetAddress;
 
 public class Controller implements WithStage {
@@ -20,6 +25,12 @@ public class Controller implements WithStage {
     public BorderPane dropArea;
     @FXML
     public Label label;
+    @FXML
+    public Label status;
+    @FXML
+    public ListView<ImageItem> images;
+    @FXML
+    public Button btRemove;
 
     private Stage currentStage;
     private NetworkManager netman;
@@ -28,8 +39,37 @@ public class Controller implements WithStage {
     @FXML
     public void initialize(){
         netman = new NetworkManager();
+        netman.setOnStatusChangeAction(this::onStatusChange);
+
         ddman = new DragDropManager(dropArea, label);
-        ddman.setOnDroppedAction(netman::sendItem);
+        ddman.setOnDroppedAction(this::droppedAction);
+
+        images.setCellFactory(p -> new ImageCell());
+        MultipleSelectionModel<ImageItem> selectionModel = images.getSelectionModel();
+        selectionModel.setSelectionMode(SelectionMode.SINGLE);
+        selectionModel.getSelectedItems().addListener(
+                (ListChangeListener<ImageItem>) c -> Platform.runLater(() -> {
+                    ImageItem selected = images.getSelectionModel().getSelectedItem();
+                    btRemove.setDisable(selected == null);
+                })
+        );
+    }
+
+    private void droppedAction(Item item) {
+        netman.sendItem(item);
+        try {
+            ImageItem it = ImageItem.fromItem(item);
+            Platform.runLater(() -> {
+                images.getItems().add(0, it);
+                images.refresh();
+            });
+        } catch (IOException e) {
+            Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, e.toString(), ButtonType.OK).showAndWait());
+        }
+    }
+
+    public void onStatusChange(Status status) {
+        Platform.runLater(() -> this.status.setText(status.name()));
     }
 
     @Override
@@ -78,5 +118,15 @@ public class Controller implements WithStage {
 
         netman.stopDiscovery();
         netman.setDestinationAddress(listView.getSelectionModel().getSelectedItem());
+    }
+
+    public void removeAction(ActionEvent actionEvent) {
+        ImageItem selected = images.getSelectionModel().getSelectedItem();
+
+        Item it = new Item(RequestType.REQ_REMOVE);
+        it.id = selected.id;
+
+        netman.sendItem(it);
+        images.getItems().removeAll(selected);
     }
 }

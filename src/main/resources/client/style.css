@@ -1,0 +1,28 @@
+.drop-out {
+    -fx-border-color: #000000;
+    -fx-text-fill: #000000;
+    -fx-border-width: 4px;
+    -fx-border-style: dashed;
+}
+
+.drop-in {
+    -fx-border-color: #008000;
+    -fx-text-fill: #008000;
+    -fx-border-width: 4px;
+    -fx-border-style: dashed;
+}
+
+.list-view {
+    -fx-background-color: white;
+}
+
+.list-cell:filled:selected:focused, .list-cell:filled:selected{
+    -fx-border-color: #00E676;
+    -fx-border-width: 2px;
+    -fx-border-style: solid;
+}
+
+.list-cell {
+    -fx-background-color: white;
+    -fx-alignment: center;
+}
